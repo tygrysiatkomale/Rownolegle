@@ -12,12 +12,12 @@ void *zadanie_watku(void *arg) {
 int main() {
     int liczba_watkow = 5;
     pthread_t watki[liczba_watkow];
-    int identyfikator;
+    int identyfikatory[liczba_watkow];
 
     // Tworzenie wątków
     for (int i = 0; i < liczba_watkow; i++) {
-        identyfikator = i;
-        if (pthread_create(&watki[i], NULL, zadanie_watku, &identyfikator) != 0) {
+        identyfikatory[i] = i;
+        if (pthread_create(&watki[i], NULL, zadanie_watku, &identyfikatory[i]) != 0) {
             perror("Błąd przy tworzeniu wątku");
             exit(1);
         }
