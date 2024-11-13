@@ -51,24 +51,21 @@ void *watek_klient(void *arg_wsk) {
     printf("\nKlient %d wchodzi do pubu\n", moj_id);
 
     for (i = 0; i < ILE_MUSZE_WYPIC; i++) {
-        // Bez sekcji krytycznej: Pobieranie kufla
-        usleep(1000);  // Opóźnienie, zwiększa szansę na kolizję
+        usleep(1000);
         if (dostepne_kufle > 0) {
-            dostepne_kufle--;  // Pobieranie kufla bez blokady
+            dostepne_kufle--;
             printf("\nKlient %d pobiera kufel. Kufli pozostało: %d\n", moj_id, dostepne_kufle);
         } else {
             printf("\nKlient %d nie może pobrać kufla - brak dostępnych\n", moj_id);
         }
 
-        // Napełnianie i picie
         printf("\nKlient %d nalewa piwo\n", moj_id);
-        usleep(50000);  // Czas nalewania
+        usleep(50000);
         printf("\nKlient %d pije piwo\n", moj_id);
-        usleep(50000);  // Czas picia
+        usleep(50000);
 
-        // Bez sekcji krytycznej: Oddawanie kufla
-        usleep(1000);  // Opóźnienie, zwiększa szansę na kolizję
-        dostepne_kufle++;  // Oddanie kufla bez blokady
+        usleep(1000);
+        dostepne_kufle++; 
         printf("\nKlient %d oddaje kufel. Kufli dostępnych: %d\n", moj_id, dostepne_kufle);
     }
 

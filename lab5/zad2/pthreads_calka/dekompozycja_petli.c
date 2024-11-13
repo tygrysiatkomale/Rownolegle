@@ -24,7 +24,8 @@ double calka_zrownoleglenie_petli(double a, double b, double dx, int l_w){
   double dx_adjust = (b-a)/N;
 
   printf("Obliczona liczba trapezów: N = %d, dx_adjust = %lf\n", N, dx_adjust);
-  //printf("a %lf, b %lf, n %d, dx %.12lf (dx_adjust %.12lf)\n", a, b, N, dx, dx_adjust);
+
+  // Inicjalizacja mutexu
   pthread_mutex_init(&mutex_calka, NULL);
 
   // Przekazanie wartości do zmiennych globalnych
@@ -38,16 +39,11 @@ double calka_zrownoleglenie_petli(double a, double b, double dx, int l_w){
     pthread_t *threads = malloc(l_w * sizeof(pthread_t));
     int *thread_ids = malloc(l_w * sizeof(int));
 
-  
-  // tworzenie struktur danych do obsługi wielowątkowości
-
-
   // Tworzenie wątków
     for (int i = 0; i < l_w; i++) {
         thread_ids[i] = i;
         pthread_create(&threads[i], NULL, calka_fragment_petli_w, (void *)&thread_ids[i]);
     }
-
 
   // Oczekiwanie na zakończenie pracy wątków i zebranie wyników
     for (int i = 0; i < l_w; i++) {
