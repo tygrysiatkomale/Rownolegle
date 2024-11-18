@@ -43,6 +43,9 @@ public class Calka_callable implements Callable<Double>{
         int nthreads = 10;
         int ntasks = 40;
 
+//        int nthreads = Runtime.getRuntime().availableProcessors();
+//        int ntasks = nthreads * 4;
+
         double actualDx = (end - start) / ntasks;
 
         // Create thread pool
