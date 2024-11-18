@@ -1,53 +1,82 @@
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
-import java.util.concurrent.Callable;
+import java.util.concurrent.*;
 
 public class Calka_callable implements Callable<Double>{
 
-    private double dx;
     private double xp;
     private double xk;
-    private int N;
+    private double dx;
 
     public Calka_callable(double xp, double xk, double dx) {
         this.xp = xp;
         this.xk = xk;
-        this.N = (int) Math.ceil((xk-xp)/dx);
-        this.dx = (xk-xp)/N;
-        System.out.println("Creating an instance of Calka_callable");
-        System.out.println("xp = " + xp + ", xk = " + xk + ", N = " + N);
-        System.out.println("dx requested = " + dx + ", dx final = " + this.dx);
+        this.dx = dx;
+    }
 
+    @Override
+    public Double call() {
+        double calka = 0.0;
+        int N = (int) Math.ceil((xk-xp) / dx);
+        double actualDx = (xk - xp) / N;
+
+        for (int i = 0; i < N; i++) {
+            double x1 = xp + actualDx * i;
+            double x2 = x1 + actualDx;
+            calka += ((getFunction(x1) + getFunction(x2)) / 2) * actualDx;
+        }
+        System.out.println("Watek " + Thread.currentThread().getName() +
+                ": " + calka);
+        return calka;
     }
 
     private double getFunction(double x) {
         return Math.sin(x);
     }
 
-    public double compute_integral() {
-        double calka = 0;
-        int i;
-        for(i=0; i<N; i++){
-            double x1 = xp+i*dx;
-            double x2 = x1+dx;
-            calka += ((getFunction(x1) + getFunction(x2))/2.)*dx;
-        }
-        System.out.println("Calka czastkowa: " + calka);
-        return calka;
-    }
-
 
     public static void main(String[] args) {
-        Scanner sc = new Scanner(System.in);
+        double start = 0.0;
+        double end = Math.PI;
+        double dx = 0.002;
+        int nthreads = 10;
+        int ntasks = 40;
 
-        System.out.println("Enter dx: ");
-        double dx = sc.nextDouble();
+        double actualDx = (end - start) / ntasks;
 
-        Calka_callable calka = new Calka_callable(0, Math.PI, dx);
-        calka.compute_integral();
-    }
+        // Create thread pool
+        ExecutorService executor = Executors.newFixedThreadPool(nthreads);
 
-    @Override
-    public Double call() {
-        return compute_integral();
+        List<Future<Double>> results = new ArrayList<>();
+
+        // Create and pass the tasks
+        for (int i = 0; i < ntasks; i++) {
+            double x1 = start + i * actualDx;
+            double x2 = x1 + actualDx;
+
+            // Create new task
+            Calka_callable task = new Calka_callable(x1, x2, dx);
+
+            // Pass the task to the thread pool
+            Future<Double> result = executor.submit(task);
+
+            // Add the Future object to the list
+            results.add(result);
+        }
+
+        // Receive results
+        double calkaResult = 0;
+
+        for (Future<Double> result : results) {
+            try {
+                calkaResult += result.get();
+            } catch (InterruptedException | ExecutionException e) {
+                e.printStackTrace();
+            }
+        }
+        executor.shutdown();
+
+        System.out.println("Calka result: "+ calkaResult);
     }
 }
