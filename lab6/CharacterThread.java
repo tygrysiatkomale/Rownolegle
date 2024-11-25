@@ -1,29 +1,34 @@
-public class CharacterThread extends Thread {
+//public class CharacterThread extends Thread {
+//
+//    private char znak;
+//    private Obraz obraz;
+//
+//    public CharacterThread(char znak, Obraz obraz) {
+//        this.znak = znak;
+//        this.obraz = obraz;
+//    }
+//
+//    @Override
+//    public void run() {
+//        obraz.calculate_histogram_parallel(znak);
+//        obraz.print_histogram_parallel(znak);
+//    }
+//}
 
-    private char character;
-    private int index;
+class CharacterThread implements Runnable {
+    private int startIndex;
+    private int endIndex;
     private Obraz obraz;
 
-    public CharacterThread(char character, int index, Obraz obraz) {
-        this.character = character;
-        this.index = index;
+    public CharacterThread(int startIndex, int endIndex, Obraz obraz) {
+        this.startIndex = startIndex;
+        this.endIndex = endIndex;
         this.obraz = obraz;
     }
 
     @Override
     public void run() {
-        int count = 0;
-        char[][] tab = obraz.getTab();
-        int size_n = obraz.getSizeN();
-        int size_m = obraz.getSizeM();
-
-        for (int i = 0; i < size_n; i++) {
-            for (int j = 0; j < size_m; j++) {
-                if (tab[i][j] == character) {
-                    count++;
-                }
-            }
-        }
-        obraz.setHistParallel(index, count);
+        obraz.calculate_histogram_parallel_range(startIndex, endIndex);
+        obraz.print_histogram_parallel_range(startIndex, endIndex);
     }
 }
