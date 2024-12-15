@@ -25,18 +25,24 @@ int main ()
     printf("Suma wyrazów tablicy (sekwencyjnie): %lf\n", suma);
 
     // Zmiana kolejności pętli (równoległa pętla zewnętrzna)
-    double suma_parallel = 0.0;
-#pragma omp parallel for default(none) shared(a) reduction(+:suma_parallel) schedule(static) ordered
+double suma_parallel = 0.0;
+#pragma omp parallel default(none) shared(a) // bez reduction, ręczne sterowanie sumą
+{
+    double suma_local = 0.0;
+
+#pragma omp for schedule(static) ordered
     for (int j = 0; j < WYMIAR; j++) {
+        int id_w = omp_get_thread_num();
         for (int i = 0; i < WYMIAR; i++) {
-            int id_w = omp_get_thread_num();
-            suma_parallel += a[i][j];
-#pragma omp ordered 
+            suma_local += a[i][j];
+#pragma omp ordered
             printf("(%1d,%1d) -> W_%1d\n", i, j, id_w);
         }
     }
 
-    printf("Suma wyrazów tablicy równolegle (dekompozycja kolumnowa, pętla zewnętrzna): %lf\n", suma_parallel);
-
-    return 0;
+#pragma omp critical
+    {
+        suma_parallel += suma_local;
+    }
 }
+printf("Suma wyrazów tablicy równolegle (dekompozycja kolumnowa, pętla zewnętrzna): %lf\n", suma_parallel);

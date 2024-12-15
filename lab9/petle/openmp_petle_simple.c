@@ -25,7 +25,7 @@ int main ()
 
     // Równoległa pętla z klauzulą reduction i ordered
     double suma_parallel = 0.0;
-#pragma omp parallel for default(none) shared(a) reduction(+:suma_parallel) ordered schedule(static)
+#pragma omp parallel for default(none) shared(a) reduction(+:suma_parallel) ordered schedule(dynamic)
     for (int i = 0; i < WYMIAR; i++) {
         int id_w = omp_get_thread_num();
         suma_parallel += a[i];

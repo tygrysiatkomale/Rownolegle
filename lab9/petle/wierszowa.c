@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <omp.h>
 
-#define WYMIAR 10
+#define WYMIAR 2
 
 int main ()
 {
