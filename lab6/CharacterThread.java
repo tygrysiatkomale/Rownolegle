@@ -32,3 +32,4 @@ class CharacterThread implements Runnable {
         obraz.print_histogram_parallel_range(startIndex, endIndex);
     }
 }
+

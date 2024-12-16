@@ -75,6 +75,7 @@ class Histogram_test {
 			watki[i].start();
 		}
 
+
 		// Oczekiwanie na zakończenie wszystkich wątków
 		for (int i = 0; i < num_threads; i++) {
 			try {

@@ -137,5 +137,4 @@ class Obraz {
 			System.out.println();
 		}
 	}
-
 }
