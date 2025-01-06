@@ -33,6 +33,7 @@ main ( int argc, char** argv )
   
   int rank, size, source, dest, tag=0; 
   int n_wier, n_wier_last;
+  int root = 0; 
   MPI_Status status;
 
   MPI_Init( &argc, &argv );
@@ -44,7 +45,7 @@ main ( int argc, char** argv )
   // x is locally initialized to zero
   for(i=0;i<WYMIAR;i++) x[i]=0.0;
 
-  if(rank==0){  
+  if(rank==root){  
     
     a = (double *) malloc((ROZMIAR+1)*sizeof(double));
     
@@ -73,7 +74,7 @@ main ( int argc, char** argv )
     // z is initialized for all ranks
     for(i=0;i<WYMIAR;i++) z[i]=0.0;
 
-    MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD );
+    MPI_Bcast(&n, 1, MPI_INT, root, MPI_COMM_WORLD ); 
     // podzial wierszowy
     n_wier = ceil(WYMIAR / size);
     n_wier_last = WYMIAR - n_wier*(size-1);
@@ -96,39 +97,13 @@ main ( int argc, char** argv )
     // ....
     
     // point-to-point not optimal communication
-    // if(rank==0){
-    //  for(i=0;i<WYMIAR*n_wier;i++) a_local[i]=a[i];
-    //   for(i=1;i<size-1;i++){
-	// MPI_Send( &a[i*WYMIAR*n_wier], n_wier*WYMIAR, MPI_DOUBLE, i, tag, MPI_COMM_WORLD );
-	// MPI_Send( &x[i*n_wier], n_wier, MPI_DOUBLE, i, tag, MPI_COMM_WORLD );
-    //   }
-    //   MPI_Send( &a[(size-1)*WYMIAR*n_wier], n_wier_last*WYMIAR, MPI_DOUBLE, size-1, tag, MPI_COMM_WORLD );
-    //   MPI_Send( &x[(size-1)*n_wier], n_wier_last, MPI_DOUBLE, size-1, tag, MPI_COMM_WORLD );
-    //   /* if(rank==0) printf("rank %d, a[0] %lf\n", rank, a[0]); */
-    //   /* if(rank==0) printf("rank %d, last %d, a[last] %lf\n", rank, */
-    //   /* 			 (size-1)*WYMIAR*n_wier+n_wier_last*WYMIAR-1, */
-    //   /* 			 a[(size-1)*WYMIAR*n_wier+n_wier_last*WYMIAR-1]); */
-    // } else {
-    //   for(i=0;i<WYMIAR;i++) x[i]=0.0;
-    //   source = 0;
-    //   if(rank<size-1){
-	// MPI_Recv( a_local, n_wier*WYMIAR, MPI_DOUBLE, source,
-	// 	  MPI_ANY_TAG, MPI_COMM_WORLD, &status );
-	// MPI_Recv( &x[rank*n_wier], n_wier, MPI_DOUBLE, source,
-	// 	  MPI_ANY_TAG, MPI_COMM_WORLD, &status );
-    //   } else {
-	// MPI_Recv( a_local, n_wier_last*WYMIAR, MPI_DOUBLE, source,
-	// 	  MPI_ANY_TAG, MPI_COMM_WORLD, &status );
-	// MPI_Recv( &x[(size-1)*n_wier], n_wier_last, MPI_DOUBLE, source,
-	// 	  MPI_ANY_TAG, MPI_COMM_WORLD, &status );	
-    //   }
-    // }
+    // Tutaj było MPI_Send i MPI_Recv i jest zamienione na MPI_Scatter:
 
-	MPI_Scatter(a, n_wier*WYMIAR, MPI_DOUBLE, a_local, n_wier*WYMIAR, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-	MPI_Scatter(x, n_wier, MPI_DOUBLE, &x[rank*n_wier], n_wier, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    
+    MPI_Scatter(a, n_wier*WYMIAR, MPI_DOUBLE, a_local, n_wier*WYMIAR, MPI_DOUBLE, root, MPI_COMM_WORLD);
+    MPI_Scatter(x, n_wier, MPI_DOUBLE, &x[rank*n_wier], n_wier, MPI_DOUBLE, root, MPI_COMM_WORLD);
+      
 
-    if(rank==0) {
+    if(rank==root) {
       printf("Starting MPI matrix-vector product with block row decomposition!\n");
       t1 = MPI_Wtime();
     }
@@ -144,11 +119,11 @@ main ( int argc, char** argv )
       int ni = n*i;
       
       for(j=0;j<n;j++){
-	t+=a_local[ni+j]*x[j];
-	//if(i==1){
-	//  printf("rank %d: row %d, column %d, a %lf, x %lf, current y %lf\n", 
-	//         rank, i, j, a_local[ni+j], x[j], t);
-	//}
+	  t+=a_local[ni+j]*x[j];
+    //if(i==1){
+    //  printf("rank %d: row %d, column %d, a %lf, x %lf, current y %lf\n", 
+    //         rank, i, j, a_local[ni+j], x[j], t);
+    //}
       }
       //printf("rank %d: row %d, final y %lf\n", rank, i, t);
       z[i]=t;
@@ -156,7 +131,7 @@ main ( int argc, char** argv )
     
     // just to measure time
     MPI_Barrier(MPI_COMM_WORLD);        
-    if(rank==0) {
+    if(rank==root) {
       t1 = MPI_Wtime() - t1;
       printf("Wersja rownolegla MPI z dekompozycją wierszową blokową\n");
       printf("\tczas wykonania: %lf, Gflop/s: %lf, GB/s> %lf\n",  
@@ -169,24 +144,25 @@ main ( int argc, char** argv )
     // ....
     
     // point-to-point not optimal communication
-    // if(rank>0){
-    // 	MPI_Send( z, n_wier, MPI_DOUBLE, 0, tag, MPI_COMM_WORLD );
-    // } else {
-    // 	for(i=1;i<size;i++){
-	// MPI_Recv( &z[i*n_wier], n_wier, MPI_DOUBLE, i, tag, MPI_COMM_WORLD, &status  );
-    // 	}
-    // }
-	MPI_Gather(z, n_wier, MPI_DOUBLE, z, n_wier, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    // 
+    // Tutaj było MPI_Send i MPI_Recv i jest zamienione na MPI_Gather:
+
+  if (rank == root) {
+    MPI_Gather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, z, n_wier, MPI_DOUBLE, root, MPI_COMM_WORLD);
+  } else {
+    MPI_Gather(z, n_wier, MPI_DOUBLE, z, n_wier, MPI_DOUBLE, root, MPI_COMM_WORLD);
+  }
+  // MPI_Gather(z, n_wier, MPI_DOUBLE, z, n_wier, MPI_DOUBLE, root, MPI_COMM_WORLD);
 
 
 
 
-      if(rank==0){
+      if(rank==root){
       
       for(i=0;i<WYMIAR;i++){
-	if(fabs(y[i]-z[i])>1.e-9*z[i]) {
-	  printf("Blad! i=%d, y[i]=%lf, z[i]=%lf\n",i, y[i], z[i]);
-	}
+    if(fabs(y[i]-z[i])>1.e-9*z[i]) {
+      printf("Blad! i=%d, y[i]=%lf, z[i]=%lf\n",i, y[i], z[i]);
+    }
       }
       
     }
@@ -209,7 +185,7 @@ main ( int argc, char** argv )
 
     }
 
-    if(rank==0) {
+    if(rank==root) {
       printf("Starting MPI matrix-vector product with block column decomposition!\n");
       t1 = MPI_Wtime();
     }
@@ -219,7 +195,7 @@ main ( int argc, char** argv )
       
       double t=0.0;
       int ni;
-      if(rank==0){
+      if(rank==root){
 	// rank==0 stores the whole a - next row starts after n elements
 	ni = n_col*i;
       } else {
@@ -279,7 +255,7 @@ main ( int argc, char** argv )
 
     // just to measure time
     MPI_Barrier(MPI_COMM_WORLD);        
-    if(rank==0) {
+    if(rank==root) {
       t1 = MPI_Wtime() - t1;
       printf("Werja rownolegla MPI z dekompozycją kolumnową blokową\n");
       printf("\tczas wykonania: %lf, Gflop/s: %lf, GB/s> %lf\n",  
@@ -292,7 +268,7 @@ main ( int argc, char** argv )
     
     
     // testing - switch on after completing calculations and communcation
-    if(rank==0){
+    if(rank==root){
       
       for(i=0;i<WYMIAR;i++){
 	if(fabs(y[i]-z[i])>1.e-9*z[i]) {
