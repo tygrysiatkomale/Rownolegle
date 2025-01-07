@@ -147,12 +147,12 @@ main ( int argc, char** argv )
     // 
     // Tutaj było MPI_Send i MPI_Recv i jest zamienione na MPI_Gather:
 
-  if (rank == root) {
-    MPI_Gather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, z, n_wier, MPI_DOUBLE, root, MPI_COMM_WORLD);
-  } else {
+  // if (rank == root) {
+  //   MPI_Gather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, z, n_wier, MPI_DOUBLE, root, MPI_COMM_WORLD);
+  // } else {
+  //   MPI_Gather(z, n_wier, MPI_DOUBLE, z, n_wier, MPI_DOUBLE, root, MPI_COMM_WORLD);
+  // }
     MPI_Gather(z, n_wier, MPI_DOUBLE, z, n_wier, MPI_DOUBLE, root, MPI_COMM_WORLD);
-  }
-  // MPI_Gather(z, n_wier, MPI_DOUBLE, z, n_wier, MPI_DOUBLE, root, MPI_COMM_WORLD);
 
 
 

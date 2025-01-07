@@ -89,7 +89,7 @@ class Obraz {
 		System.out.println();
 	}
 
-	public synchronized void countCharsInRange(int startChar, int endChar) {
+	public void countCharsInRange(int startChar, int endChar) {
 		for(int k = startChar; k < endChar; k++){
 			char c = (char) (k);
 			int count = 0;
