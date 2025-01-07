@@ -41,12 +41,80 @@ class Obraz {
 		clear_histogram_parallel();
 	}
 
+	public boolean compareHist() {
+		for(int i=0;i<94;i++) {
+			if (histogram[i] != hist_parallel[i]){
+				return false;
+			}
+		}
+		return true;
+	}
+
+	public void checkHistCorrectness() {
+		if(compareHist()) {
+			System.out.println("The parallel histogram follows the sequential one!");
+		} else {
+			System.out.println("Error: Parallel histogram is different from sequential!");
+		}
+	}
+
 	public void clear_histogram(){
 		for(int i=0;i<94;i++) histogram[i]=0;
 	}
 
 	public void clear_histogram_parallel(){
 		for(int i=0;i<94;i++) hist_parallel[i]=0;
+	}
+
+	public synchronized void countOneChar(char c) {
+		int index = c - 33;
+		int count = 0;
+		for(int i=0; i<size_n; i++){
+			for(int j=0; j<size_m; j++){
+				if(tab[i][j] == c){
+					count++;
+				}
+			}
+		}
+		hist_parallel[index] = count;
+	}
+
+	public synchronized void printOneCharHistogram(char c){
+		int index = c - 33;
+		int count = histogram[index];
+		System.out.print("Wątek " + Thread.currentThread().threadId() + ": " + c + " "); // tu bylo getId
+		for(int i=0; i<count; i++){
+			System.out.print("=");
+		}
+		System.out.println();
+	}
+
+	public synchronized void countCharsInRange(int startChar, int endChar) {
+		for(int k = startChar; k < endChar; k++){
+			char c = (char) (k);
+			int count = 0;
+			for(int i=0; i<size_n; i++){
+				for(int j=0; j<size_m; j++){
+					if(tab[i][j] == c){
+						count++;
+					}
+				}
+			}
+			hist_parallel[k - 33] = count;
+		}
+	}
+
+	public synchronized void printRangeHistogram(int startChar, int endChar) {
+		for(int k = startChar; k < endChar; k++){
+			char c = (char) (k);
+			int index = k - 33;
+			int count = hist_parallel[index];
+			System.out.print("Wątek " + Thread.currentThread().threadId() + ": " + c + " ");
+			for (int i=0; i<count; i++){
+				System.out.print("=");
+			}
+			System.out.println();
+		}
 	}
 
 	public void calculate_histogram(){
